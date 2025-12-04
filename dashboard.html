@@ -10,247 +10,499 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
         body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
         .sidebar-item:hover { background-color: #eff6ff; color: #2563eb; transform: translateX(-5px); }
         .sidebar-item { transition: all 0.3s ease; }
         .active-nav { background-color: #dbeafe; color: #1d4ed8; border-right: 4px solid #1d4ed8; }
-        /* Mobile handling */
-        @media (max-width: 768px) { .desktop-sidebar { display: none; } }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Mobile Safe Area */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
-<body class="text-gray-800 h-screen overflow-hidden flex">
+<body class="text-gray-800 h-screen overflow-hidden flex bg-slate-50">
 
-    <aside class="w-64 bg-white shadow-xl h-full flex flex-col z-20 hidden md:flex desktop-sidebar">
+    <aside class="w-64 bg-white shadow-xl h-full flex flex-col z-20 hidden md:flex">
         <div class="p-6 border-b flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg"><i class="fa-solid fa-crosshairs"></i></div>
-            <div><h1 class="text-xl font-bold">Hunter Pro</h1><p class="text-xs text-gray-500">CRM v2.0</p></div>
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg">
+                <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Hunter Pro</h1>
+                <p class="text-xs text-gray-500">CRM System v2.0</p>
+            </div>
         </div>
+
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-item active-nav w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-chart-pie w-6"></i> لوحة التحكم</button>
-            <button onclick="showSection('hunt')" id="nav-hunt" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-gem w-6"></i> محرك البحث</button>
-            <button onclick="showSection('leads')" id="nav-leads" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-users w-6"></i> العملاء</button>
-            <button onclick="showSection('campaigns')" id="nav-campaigns" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-brands fa-whatsapp w-6"></i> الحملات</button>
-            <button onclick="showSection('chat')" id="nav-chat" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-robot w-6"></i> شات الأدمن</button>
+            <button onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-item active-nav w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 font-medium">
+                <i class="fa-solid fa-chart-pie w-6"></i> لوحة التحكم
+            </button>
+            <button onclick="showSection('hunt')" id="nav-hunt" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 font-medium">
+                <i class="fa-solid fa-gem w-6"></i> محرك البحث
+            </button>
+            <button onclick="showSection('leads')" id="nav-leads" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 font-medium">
+                <i class="fa-solid fa-users w-6"></i> العملاء
+            </button>
+            <button onclick="showSection('campaigns')" id="nav-campaigns" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 font-medium">
+                <i class="fa-brands fa-whatsapp w-6"></i> الحملات
+            </button>
+            <button onclick="showSection('chat')" id="nav-chat" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 font-medium">
+                <i class="fa-solid fa-robot w-6"></i> مساعد الأدمن
+            </button>
         </nav>
-        <div class="p-4 border-t bg-gray-50"><button onclick="logout()" class="w-full text-red-600 py-2 text-sm"><i class="fa-solid fa-sign-out-alt"></i> خروج</button></div>
+
+        <div class="p-4 border-t bg-gray-50">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">A</div>
+                <div>
+                    <p class="text-sm font-bold">Admin User</p>
+                    <p class="text-xs text-green-500">● متصل الآن</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition text-sm">
+                <i class="fa-solid fa-sign-out-alt ml-2"></i> تسجيل الخروج
+            </button>
+        </div>
     </aside>
 
-    <main class="flex-1 h-full overflow-y-auto relative bg-slate-50 p-4 md:p-6">
-        
-        <div class="md:hidden flex justify-between items-center mb-6">
-            <h1 class="font-bold text-lg text-blue-800">Hunter Pro</h1>
-            <button onclick="logout()" class="text-red-500"><i class="fa-solid fa-power-off"></i></button>
-        </div>
-
-        <div id="section-dashboard" class="section-content animate-fade-in">
-            <h2 class="text-2xl font-bold mb-6">نظرة عامة</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p class="text-gray-500 text-sm">إجمالي العملاء</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="stat-leads">0</h3>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <p class="text-gray-500 text-sm">المستخدمين</p>
-                    <h3 class="text-3xl font-bold text-gray-800" id="stat-users">0</h3>
-                </div>
+    <main class="flex-1 h-full overflow-y-auto relative w-full">
+        <header class="md:hidden bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-30">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white"><i class="fa-solid fa-crosshairs"></i></div>
+                <h1 class="font-bold text-lg text-blue-800">Hunter Pro</h1>
             </div>
-        </div>
+            <button onclick="logout()" class="text-red-500 bg-red-50 p-2 rounded-full"><i class="fa-solid fa-power-off"></i></button>
+        </header>
 
-        <div id="section-hunt" class="section-content hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-3xl p-8 text-white mb-8">
-                <h2 class="text-3xl font-bold mb-2">Diamond Hunter 💎</h2>
-                <div class="grid grid-cols-1 gap-4 mt-6">
-                    <input type="text" id="hunt-intent" placeholder="مثال: مطلوب شقة في التجمع" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 placeholder-white/70 text-white">
-                    <select id="hunt-city" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-black"><option value="القاهرة">القاهرة</option><option value="الجيزة">الجيزة</option></select>
-                    <button onclick="startHunt()" class="w-full bg-yellow-400 text-blue-900 font-bold py-3 rounded-lg shadow-lg">🚀 بدء البحث</button>
-                </div>
-            </div>
+        <div class="p-4 md:p-6 max-w-7xl mx-auto space-y-8 pb-24 md:pb-6">
             
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="font-bold mb-2">أدوات سريعة</h3>
-                <textarea id="extract-text" class="w-full border rounded p-2 text-sm" placeholder="الصق نص لاستخراج الأرقام..."></textarea>
-                <button onclick="extractPhones()" class="mt-2 bg-gray-800 text-white px-4 py-2 rounded text-sm">استخراج الأرقام</button>
-                <div id="extract-res" class="mt-2 text-green-600 text-sm"></div>
-            </div>
-        </div>
+            <div id="section-dashboard" class="section-content animate-fade-in">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">نظرة عامة</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">إجمالي العملاء</p>
+                            <h3 class="text-3xl font-bold text-gray-800" id="stat-leads">...</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-xl">
+                            <i class="fa-solid fa-user-group"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">رسائل الحملات</p>
+                            <h3 class="text-3xl font-bold text-gray-800" id="stat-msgs">...</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600 text-xl">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm mb-1">المستخدمين</p>
+                            <h3 class="text-3xl font-bold text-gray-800" id="stat-users">...</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center text-purple-600 text-xl">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                    </div>
+                </div>
 
-        <div id="section-leads" class="section-content hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">العملاء</h2>
-                <button onclick="loadLeads()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">تحديث</button>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="font-bold text-lg mb-4 text-gray-700">آخر النشاطات</h3>
+                    <div class="space-y-4" id="events-list">
+                        <p class="text-center text-gray-400 py-4">جاري التحميل...</p>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow overflow-x-auto">
-                <table class="w-full text-right text-sm">
-                    <thead class="bg-gray-50 text-gray-600"><tr><th class="p-4">الهاتف</th><th class="p-4">الجودة</th><th class="p-4">المصدر</th><th class="p-4">واتساب</th></tr></thead>
-                    <tbody id="leads-body"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <div id="section-campaigns" class="section-content hidden">
-            <h2 class="text-2xl font-bold mb-6">حملات واتساب</h2>
-            <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
-                <h3 class="font-bold mb-4">إنشاء حملة</h3>
-                <form onsubmit="createCampaign(event)" class="space-y-4">
-                    <input name="name" type="text" placeholder="اسم الحملة" required class="w-full border p-2 rounded">
-                    <textarea name="message" placeholder="الرسالة" required class="w-full border p-2 rounded"></textarea>
-                    <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded">حفظ</button>
-                </form>
-            </div>
-            <div id="campaigns-list" class="space-y-3"></div>
-        </div>
+            <div id="section-hunt" class="section-content hidden">
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-3xl p-6 md:p-8 text-white mb-8 relative overflow-hidden shadow-xl">
+                    <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                    <h2 class="text-3xl font-bold mb-2">Diamond Hunter 💎</h2>
+                    <p class="opacity-90 mb-6 text-sm md:text-base">محرك البحث الذكي عن العملاء المحتملين ذوي الجودة العالية</p>
+                    
+                    <div class="bg-white/10 backdrop-blur-md p-4 md:p-6 rounded-xl border border-white/20">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm mb-2 opacity-80">عن ماذا تبحث؟</label>
+                                <input type="text" id="hunt-intent" placeholder="مثال: مطلوب شقة في التجمع" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 placeholder-white/50 focus:outline-none focus:bg-white/30 transition text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-2 opacity-80">المدينة الرئيسية</label>
+                                <select id="hunt-city" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 focus:outline-none text-white [&>option]:text-black">
+                                    <option value="القاهرة">القاهرة (التجمع، مدينة نصر...)</option>
+                                    <option value="الجيزة">الجيزة (أكتوبر، زايد...)</option>
+                                    <option value="الإسكندرية">الإسكندرية</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-2 opacity-80">نطاق الوقت</label>
+                                <select id="hunt-time" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 focus:outline-none text-white [&>option]:text-black">
+                                    <option value="qdr:m">آخر شهر</option>
+                                    <option value="qdr:w">آخر أسبوع</option>
+                                    <option value="qdr:d">آخر 24 ساعة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="startHunt()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold py-3 rounded-lg shadow-lg shadow-yellow-400/20 transition transform hover:scale-[1.01] flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-rocket"></i> بدء البحث الآن
+                        </button>
+                    </div>
+                </div>
 
-        <div id="section-chat" class="section-content hidden h-[80vh] flex flex-col">
-            <div class="bg-white p-4 rounded-t-xl border-b font-bold">💬 شات الأدمن</div>
-            <div id="chat-box" class="flex-1 bg-white p-4 overflow-y-auto space-y-2 border-x"></div>
-            <div class="p-2 bg-white rounded-b-xl border flex gap-2">
-                <input id="chat-input" class="flex-1 border p-2 rounded" placeholder="اكتب رسالة...">
-                <button onclick="sendChat()" class="bg-blue-600 text-white px-4 rounded"><i class="fa-solid fa-paper-plane"></i></button>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-4"><i class="fa-solid fa-wrench ml-2 text-blue-500"></i>أدوات سريعة</h3>
+                    <div class="flex gap-4">
+                        <button onclick="showExtractModal()" class="flex-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 py-4 rounded-xl flex flex-col items-center gap-2 transition">
+                            <i class="fa-solid fa-filter text-2xl text-purple-500"></i>
+                            <span class="text-sm font-medium">استخراج أرقام</span>
+                        </button>
+                        <button class="flex-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 py-4 rounded-xl flex flex-col items-center gap-2 transition">
+                            <i class="fa-solid fa-file-export text-2xl text-green-500"></i>
+                            <span class="text-sm font-medium">تصدير اكسيل</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
 
+            <div id="section-leads" class="section-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">قاعدة البيانات</h2>
+                    <button onclick="loadLeads()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-600/20 text-sm">
+                        <i class="fa-solid fa-rotate-right ml-2"></i> تحديث
+                    </button>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right min-w-[600px]">
+                            <thead class="bg-gray-50 text-gray-600 text-sm uppercase">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">الهاتف</th>
+                                    <th class="px-6 py-4 font-medium">الجودة</th>
+                                    <th class="px-6 py-4 font-medium">المصدر</th>
+                                    <th class="px-6 py-4 font-medium">التاريخ</th>
+                                    <th class="px-6 py-4 font-medium">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leads-table-body" class="divide-y divide-gray-100 text-sm text-gray-700">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-chat" class="section-content hidden h-[calc(100vh-140px)] flex flex-col">
+                <div class="bg-white rounded-t-2xl p-4 border-b flex justify-between items-center shadow-sm">
+                    <h2 class="font-bold text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-blue-600"></i> مساعد النظام
+                    </h2>
+                    <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">● متصل</span>
+                </div>
+                
+                <div id="chat-messages" class="flex-1 bg-gray-50 p-4 overflow-y-auto space-y-4">
+                    <div class="flex justify-start">
+                        <div class="bg-white border border-gray-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm max-w-md">
+                            <p class="text-sm">أهلاً بك يا أدمن! أنا جاهز للمساعدة. يمكنك سؤالي عن الإحصائيات.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-b-2xl border-t shadow-sm mb-16 md:mb-0">
+                    <form onsubmit="sendChatMessage(event)" class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="اكتب رسالتك..." class="flex-1 bg-gray-100 border-0 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-xl flex items-center justify-center transition">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="section-campaigns" class="section-content hidden">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">حملات واتساب</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold mb-4 border-b pb-2">إنشاء حملة جديدة</h3>
+                        <form onsubmit="createCampaign(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">اسم الحملة</label>
+                                <input name="name" type="text" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">الرسالة</label>
+                                <textarea name="message" required rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-blue-500"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg hover:bg-green-700 transition">
+                                حفظ وإنشاء الحملة
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="space-y-4" id="campaigns-list">
+                        <div class="text-center text-gray-400 py-10">جاري التحميل...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </main>
 
-    <div id="login-overlay" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-sm text-center">
-            <h2 class="text-2xl font-bold mb-6">تسجيل الدخول</h2>
-            <input id="login-email" type="email" value="admin@example.com" class="w-full border p-3 rounded mb-3" placeholder="البريد">
-            <input id="login-pass" type="password" value="admin123" class="w-full border p-3 rounded mb-4" placeholder="كلمة المرور">
-            <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-3 rounded">دخول</button>
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center p-2 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] pb-safe">
+        <button onclick="showSection('dashboard')" id="mob-dashboard" class="mobile-nav-item text-blue-600 flex flex-col items-center gap-1 p-2 rounded-lg transition w-full">
+            <i class="fa-solid fa-chart-pie text-xl"></i>
+            <span class="text-[10px] font-bold">الرئيسية</span>
+        </button>
+        <button onclick="showSection('hunt')" id="mob-hunt" class="mobile-nav-item text-gray-500 hover:text-blue-600 flex flex-col items-center gap-1 p-2 rounded-lg transition w-full">
+            <i class="fa-solid fa-gem text-xl"></i>
+            <span class="text-[10px] font-bold">البحث</span>
+        </button>
+        <button onclick="showSection('leads')" id="mob-leads" class="mobile-nav-item text-gray-500 hover:text-blue-600 flex flex-col items-center gap-1 p-2 rounded-lg transition w-full">
+            <i class="fa-solid fa-users text-xl"></i>
+            <span class="text-[10px] font-bold">العملاء</span>
+        </button>
+        <button onclick="showSection('campaigns')" id="mob-campaigns" class="mobile-nav-item text-gray-500 hover:text-blue-600 flex flex-col items-center gap-1 p-2 rounded-lg transition w-full">
+            <i class="fa-brands fa-whatsapp text-xl"></i>
+            <span class="text-[10px] font-bold">حملات</span>
+        </button>
+        <button onclick="showSection('chat')" id="mob-chat" class="mobile-nav-item text-gray-500 hover:text-blue-600 flex flex-col items-center gap-1 p-2 rounded-lg transition w-full">
+            <i class="fa-solid fa-robot text-xl"></i>
+            <span class="text-[10px] font-bold">مساعد</span>
+        </button>
+    </nav>
+
+    <div id="modal-extract" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-scale-in">
+            <h3 class="font-bold text-lg mb-4">استخراج أرقام الهواتف</h3>
+            <textarea id="extract-text" class="w-full h-40 bg-gray-50 border rounded-lg p-3 text-sm mb-4" placeholder="الصق النص هنا..."></textarea>
+            <div id="extract-result" class="hidden mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm break-all max-h-32 overflow-y-auto"></div>
+            <div class="flex justify-end gap-3">
+                <button onclick="document.getElementById('modal-extract').classList.add('hidden')" class="px-4 py-2 text-gray-500 hover:text-gray-700">إغلاق</button>
+                <button onclick="performExtraction()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">استخراج</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-overlay" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <div class="w-16 h-16 bg-blue-600 rounded-xl mx-auto flex items-center justify-center text-white text-2xl mb-4">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Hunter Pro CRM</h2>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="email" id="login-email" placeholder="البريد الإلكتروني" value="admin@example.com" class="w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="login-pass" placeholder="كلمة المرور" value="admin123" class="w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition">تسجيل الدخول</button>
+            </form>
         </div>
     </div>
 
     <script>
-        const API = ""; 
-        let token = localStorage.getItem('token');
+        const API_URL = ""; 
+        let token = localStorage.getItem('access_token');
+        let currentUser = localStorage.getItem('user_id') || 'admin';
         let ws;
 
-        if(token) document.getElementById('login-overlay').classList.add('hidden');
-        if(token) initApp();
+        document.addEventListener('DOMContentLoaded', () => {
+            if (token) {
+                document.getElementById('login-overlay').classList.add('hidden');
+                loadStats();
+                loadLeads();
+                initWebSocket();
+            }
+        });
 
-        async function login() {
+        async function handleLogin(e) {
+            e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-pass').value;
+
             try {
-                const res = await fetch(API + '/api/login', {
+                const res = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email, password})
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
                 });
-                if(!res.ok) throw new Error('فشل الدخول');
+
+                if (!res.ok) throw new Error('بيانات الدخول غير صحيحة');
+
                 const data = await res.json();
                 token = data.access_token;
-                localStorage.setItem('token', token);
+                localStorage.setItem('access_token', token);
+                localStorage.setItem('user_id', email);
+                
                 document.getElementById('login-overlay').classList.add('hidden');
-                initApp();
-            } catch(e) { alert('بيانات خطأ'); }
+                Swal.fire({ icon: 'success', title: 'تم الدخول بنجاح', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                
+                loadStats();
+                loadLeads();
+                initWebSocket();
+            } catch (err) { Swal.fire('خطأ', err.message, 'error'); }
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        function logout() { localStorage.removeItem('access_token'); location.reload(); }
 
-        function initApp() {
-            loadStats();
-            loadLeads();
-            initWS();
-        }
+        function showSection(sectionId) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.add('hidden'));
+            
+            // Update Desktop Sidebar
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active-nav'));
+            const deskBtn = document.getElementById(`nav-${sectionId}`);
+            if(deskBtn) deskBtn.classList.add('active-nav');
 
-        function showSection(id) {
-            document.querySelectorAll('.section-content').forEach(d => d.classList.add('hidden'));
-            document.getElementById('section-'+id).classList.remove('hidden');
-            if(id === 'campaigns') loadCampaigns();
+            // Update Mobile Nav
+            document.querySelectorAll('.mobile-nav-item').forEach(el => {
+                el.classList.remove('text-blue-600');
+                el.classList.add('text-gray-500');
+            });
+            const mobBtn = document.getElementById(`mob-${sectionId}`);
+            if(mobBtn) {
+                mobBtn.classList.remove('text-gray-500');
+                mobBtn.classList.add('text-blue-600');
+            }
+            
+            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+            if(sectionId === 'campaigns') loadCampaigns();
         }
 
         async function loadStats() {
-            const res = await fetch(API + '/api/admin-stats');
-            const data = await res.json();
-            document.getElementById('stat-leads').innerText = data.total_leads;
-            document.getElementById('stat-users').innerText = data.total_users;
+            try {
+                const res = await fetch(`${API_URL}/api/admin-stats`);
+                const data = await res.json();
+                document.getElementById('stat-users').innerText = data.total_users;
+                document.getElementById('stat-leads').innerText = data.total_leads;
+                document.getElementById('stat-msgs').innerText = data.total_messages;
+            } catch (e) {}
         }
 
         async function loadLeads() {
-            const res = await fetch(API + '/api/leads');
-            const data = await res.json();
-            const html = data.leads.map(l => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 font-bold">${l.phone_number}</td>
-                    <td class="p-3"><span class="bg-gray-100 px-2 rounded text-xs">${l.quality}</span></td>
-                    <td class="p-3 text-xs text-gray-500">${l.source}</td>
-                    <td class="p-3"><button onclick="sendSingleWS('${l.phone_number}')" class="text-green-600"><i class="fa-brands fa-whatsapp"></i></button></td>
-                </tr>
-            `).join('');
-            document.getElementById('leads-body').innerHTML = html || '<tr><td colspan="4" class="text-center p-4">لا يوجد بيانات</td></tr>';
+            const tbody = document.getElementById('leads-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">جاري التحميل...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}/api/leads?user_id=${currentUser}`);
+                const data = await res.json();
+                if (data.leads.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">لا يوجد عملاء حتى الآن</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.leads.map(lead => `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-bold text-gray-800">${lead.phone_number}</td>
+                        <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${lead.quality.includes('ممتاز') ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}">${lead.quality}</span></td>
+                        <td class="px-6 py-4 text-gray-500">${lead.source}</td>
+                        <td class="px-6 py-4 text-gray-400 text-xs">${new Date(lead.created_at).toLocaleDateString('ar-EG')}</td>
+                        <td class="px-6 py-4 flex gap-2">
+                            <button onclick="sendWhatsapp('${lead.phone_number}')" class="text-green-600 hover:bg-green-100 p-2 rounded-lg"><i class="fa-brands fa-whatsapp"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {}
         }
 
         async function startHunt() {
             const intent = document.getElementById('hunt-intent').value;
             const city = document.getElementById('hunt-city').value;
-            if(!intent) return alert('اكتب بتبحث عن ايه');
-            Swal.fire({title: 'جاري البحث', text: 'سيبدأ النظام البحث في الخلفية', icon: 'success'});
-            await fetch(API + '/start_hunt', {
+            if (!intent) return Swal.fire('تنبيه', 'يرجى كتابة ما تبحث عنه', 'warning');
+            Swal.fire({ title: 'جاري البحث...', text: 'سيبدأ النظام البحث في الخلفية', icon: 'info', showConfirmButton: false, timer: 3000 });
+            await fetch(`${API_URL}/start_hunt`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({intent_sentence: intent, city: city, user_id: 'admin'})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ intent_sentence: intent, city: city, user_id: currentUser })
             });
         }
 
-        async function extractPhones() {
-            const text = document.getElementById('extract-text').value;
-            const res = await fetch(API + '/api/extract-phones', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text})
+        async function sendWhatsapp(phone) {
+            const { value: text } = await Swal.fire({
+                input: 'textarea',
+                inputLabel: `رسالة إلى ${phone}`,
+                inputPlaceholder: 'اكتب رسالتك...',
+                showCancelButton: true,
+                confirmButtonText: 'إرسال'
             });
-            const data = await res.json();
-            document.getElementById('extract-res').innerText = `تم استخراج: ${data.phones.join(', ')}`;
+            if (text) {
+                await fetch(`${API_URL}/api/send-whatsapp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone_number: phone, message: text, user_id: currentUser })
+                });
+                Swal.fire('تم الإرسال', '', 'success');
+            }
         }
 
         async function createCampaign(e) {
             e.preventDefault();
-            const fd = new FormData(e.target);
-            fd.append('user_id', 'admin');
-            await fetch(API + '/api/create-campaign', {method: 'POST', body: fd});
+            const formData = new FormData(e.target);
+            formData.append('user_id', currentUser);
+            await fetch(`${API_URL}/api/create-campaign`, { method: 'POST', body: formData });
+            Swal.fire('نجاح', 'تم إنشاء الحملة', 'success');
             loadCampaigns();
             e.target.reset();
         }
 
         async function loadCampaigns() {
-            const res = await fetch(API + '/api/my-campaigns?user_id=admin');
+            const res = await fetch(`${API_URL}/api/my-campaigns?user_id=${currentUser}`);
             const data = await res.json();
-            document.getElementById('campaigns-list').innerHTML = data.campaigns.map(c => `
-                <div class="bg-gray-50 p-3 rounded border flex justify-between">
-                    <div><b>${c.name}</b><br><small>${c.message}</small></div>
-                    <button onclick="sendCamp('${c.id}')" class="text-blue-600">ارسال</button>
+            const container = document.getElementById('campaigns-list');
+            if(!data.campaigns || data.campaigns.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400">لا توجد حملات</div>';
+                return;
+            }
+            container.innerHTML = data.campaigns.map(camp => `
+                <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
+                    <div><h4 class="font-bold text-gray-800">${camp.name}</h4><p class="text-sm text-gray-500">${camp.message}</p></div>
+                    <button onclick="sendCampaign('${camp.id}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">إرسال</button>
                 </div>
             `).join('');
         }
 
-        async function sendSingleWS(phone) {
-            const msg = prompt("اكتب الرسالة:");
-            if(msg) await fetch(API + '/api/send-whatsapp', {
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({phone_number: phone, message: msg, user_id: 'admin'})
+        async function sendCampaign(id) {
+            Swal.fire({ title: 'جاري الإرسال...', showConfirmButton: false, timer: 1500 });
+            await fetch(`${API_URL}/api/send-campaign`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ campaign_id: id })
             });
         }
 
-        // Chat
-        function initWS() {
-            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-            ws = new WebSocket(`${proto}://${location.host}/ws/admin-chat`);
-            ws.onmessage = e => {
-                const box = document.getElementById('chat-box');
-                box.innerHTML += `<div class="bg-gray-100 p-2 rounded self-start max-w-[80%] text-sm mb-2">${e.data}</div>`;
-                box.scrollTop = box.scrollHeight;
+        function showExtractModal() { document.getElementById('modal-extract').classList.remove('hidden'); }
+
+        async function performExtraction() {
+            const text = document.getElementById('extract-text').value;
+            const res = await fetch(`${API_URL}/api/extract-phones`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+            document.getElementById('extract-result').classList.remove('hidden');
+            document.getElementById('extract-result').innerHTML = `تم استخراج ${data.phones.length} رقم:<br> ${data.phones.join(', ')}`;
+        }
+
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${protocol}://${window.location.host}/ws/admin-chat`);
+            ws.onmessage = function(event) {
+                const chatBox = document.getElementById('chat-messages');
+                chatBox.innerHTML += `<div class="flex justify-start"><div class="bg-white border border-gray-200 rounded-2xl rounded-tr-none px-4 py-3 shadow-sm max-w-md"><p class="text-sm">${event.data}</p></div></div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
             };
         }
-        function sendChat() {
-            const inp = document.getElementById('chat-input');
-            if(inp.value && ws) {
-                ws.send(inp.value);
-                const box = document.getElementById('chat-box');
-                box.innerHTML += `<div class="bg-blue-100 p-2 rounded self-end max-w-[80%] text-sm mb-2 ml-auto">${inp.value}</div>`;
-                inp.value = '';
-                box.scrollTop = box.scrollHeight;
-            }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value;
+            if(!msg) return;
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 text-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm max-w-md"><p class="text-sm">${msg}</p></div></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            if(ws) ws.send(msg);
+            input.value = '';
         }
     </script>
 </body>
