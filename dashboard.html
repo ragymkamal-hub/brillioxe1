@@ -2,555 +2,256 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Hunter Pro CRM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunter Pro CRM - 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root {
-            --primary-dark: #1A1F36;
-            --cyan: #00D9FF;
-            --green: #00B894;
-            --red: #FF7675;
-            --white: #FFFFFF;
-            --gray-light: #B2BAC2;
-        }
-        * {
-            box-sizing: border-box;
-        }
-        html, body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-            background: var(--primary-dark);
-            color: var(--white);
-            min-height: 100vh;
-            width: 100%;
-            overflow-x: hidden;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
-            width: 100%;
-            margin: 20px 0;
-        }
-        .btn {
-            background: var(--cyan);
-            color: var(--primary-dark);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            margin: 8px 0;
-            width: 100%;
-            font-size: 16px;
-            transition: background 0.3s ease;
-        }
-        .btn:hover {
-            background: #00a3cc;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            margin: 8px 0;
-            font-size: 16px;
-            font-family: inherit;
-        }
-        #admin-chat-container, #campaigns-section, #extractor-container {
-            width: 100%;
-            max-width: 800px;
-            margin-top: 20px;
-        }
-        #admin-chat-messages, .chat-messages {
-            height: 50vh;
-            max-height: 500px;
-            overflow-y: auto;
-            background: #343541;
-            padding: 16px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .chat-message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 15px;
-            line-height: 1.5;
-            word-break: break-word;
-        }
-        .chat-message.user {
-            background: #00B894;
-            color: #fff;
-            align-self: flex-end;
-        }
-        .chat-message.bot {
-            background: #444654;
-            color: #fff;
-            align-self: flex-start;
-        }
-        .typing-indicator {
-            display: none;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
-            background: #444654;
-            border-radius: 8px;
-            width: fit-content;
-        }
-        .typing-indicator span {
-            width: 8px;
-            height: 8px;
-            background: #fff;
-            border-radius: 50%;
-            animation: blink 1.2s infinite;
-        }
-        @keyframes blink {
-            0%, 60%, 100% { opacity: 0.2; }
-            30% { opacity: 1; }
-        }
-        .chat-input-form {
-            display: flex;
-            gap: 8px;
-            padding: 12px;
-            background: #202123;
-            border-radius: 0 0 8px 8px;
-        }
-        .chat-input-form textarea {
-            flex: 1;
-            background: #40414f;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            resize: none;
-            font-family: inherit;
-            font-size: 16px;
-            max-height: 120px;
-        }
-        .chat-input-form .send-btn {
-            background: #00B894;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 0 20px;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        textarea {
-            width: 100%;
-            border-radius: 8px;
-            padding: 10px;
-            border: none;
-            resize: vertical;
-        }
-        .campaign-card {
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            text-align: right;
-        }
-
-        /* ====== Responsive: جميع الأجهزة ====== */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 10px;
-            }
-            .card {
-                padding: 15px;
-                margin: 10px 0;
-            }
-            .btn {
-                font-size: 18px;
-                padding: 14px;
-            }
-            input, textarea {
-                font-size: 18px;
-                padding: 14px;
-            }
-            #admin-chat-messages, .chat-messages {
-                height: 40vh;
-                padding: 12px;
-            }
-            .chat-message {
-                font-size: 16px;
-            }
-        }
-
-        @media (min-width: 601px) and (max-width: 1024px) {
-            .container {
-                padding: 15px;
-            }
-            .card {
-                padding: 18px;
-            }
-            .btn {
-                font-size: 17px;
-                padding: 13px;
-            }
-            input, textarea {
-                font-size: 17px;
-                padding: 13px;
-            }
-        }
-
-        @media (min-width: 1025px) {
-            .container {
-                padding: 20px;
-            }
-            .card {
-                padding: 20px;
-            }
-            .btn {
-                font-size: 16px;
-                padding: 12px;
-            }
-            input, textarea {
-                font-size: 16px;
-                padding: 12px;
-            }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f3f4f6; }
+        .sidebar-item:hover { background-color: #eff6ff; color: #2563eb; transform: translateX(-5px); }
+        .sidebar-item { transition: all 0.3s ease; }
+        .active-nav { background-color: #dbeafe; color: #1d4ed8; border-right: 4px solid #1d4ed8; }
+        /* Mobile handling */
+        @media (max-width: 768px) { .desktop-sidebar { display: none; } }
     </style>
 </head>
-<body>
+<body class="text-gray-800 h-screen overflow-hidden flex">
 
-    <!-- شاشة 1: تسجيل الدخول -->
-    <div id="login-form" class="card">
-        <h2>🔐 تسجيل الدخول</h2>
-        <!-- زرار Google (محاكاة) -->
-        <button class="btn" onclick="loginWithGoogle()">دخول بـ Google</button>
-        <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
-        <input id="email" placeholder="البريد الإلكتروني" value="admin@example.com"><br>
-        <input id="password" type="password" placeholder="كلمة السر" value="admin123"><br>
-        <button class="btn" onclick="login()">دخول يدوي</button>
+    <aside class="w-64 bg-white shadow-xl h-full flex flex-col z-20 hidden md:flex desktop-sidebar">
+        <div class="p-6 border-b flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg"><i class="fa-solid fa-crosshairs"></i></div>
+            <div><h1 class="text-xl font-bold">Hunter Pro</h1><p class="text-xs text-gray-500">CRM v2.0</p></div>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="showSection('dashboard')" id="nav-dashboard" class="sidebar-item active-nav w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-chart-pie w-6"></i> لوحة التحكم</button>
+            <button onclick="showSection('hunt')" id="nav-hunt" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-gem w-6"></i> محرك البحث</button>
+            <button onclick="showSection('leads')" id="nav-leads" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-users w-6"></i> العملاء</button>
+            <button onclick="showSection('campaigns')" id="nav-campaigns" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-brands fa-whatsapp w-6"></i> الحملات</button>
+            <button onclick="showSection('chat')" id="nav-chat" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium"><i class="fa-solid fa-robot w-6"></i> شات الأدمن</button>
+        </nav>
+        <div class="p-4 border-t bg-gray-50"><button onclick="logout()" class="w-full text-red-600 py-2 text-sm"><i class="fa-solid fa-sign-out-alt"></i> خروج</button></div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto relative bg-slate-50 p-4 md:p-6">
+        
+        <div class="md:hidden flex justify-between items-center mb-6">
+            <h1 class="font-bold text-lg text-blue-800">Hunter Pro</h1>
+            <button onclick="logout()" class="text-red-500"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+
+        <div id="section-dashboard" class="section-content animate-fade-in">
+            <h2 class="text-2xl font-bold mb-6">نظرة عامة</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="text-gray-500 text-sm">إجمالي العملاء</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="stat-leads">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <p class="text-gray-500 text-sm">المستخدمين</p>
+                    <h3 class="text-3xl font-bold text-gray-800" id="stat-users">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-hunt" class="section-content hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-3xl p-8 text-white mb-8">
+                <h2 class="text-3xl font-bold mb-2">Diamond Hunter 💎</h2>
+                <div class="grid grid-cols-1 gap-4 mt-6">
+                    <input type="text" id="hunt-intent" placeholder="مثال: مطلوب شقة في التجمع" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 placeholder-white/70 text-white">
+                    <select id="hunt-city" class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-black"><option value="القاهرة">القاهرة</option><option value="الجيزة">الجيزة</option></select>
+                    <button onclick="startHunt()" class="w-full bg-yellow-400 text-blue-900 font-bold py-3 rounded-lg shadow-lg">🚀 بدء البحث</button>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+                <h3 class="font-bold mb-2">أدوات سريعة</h3>
+                <textarea id="extract-text" class="w-full border rounded p-2 text-sm" placeholder="الصق نص لاستخراج الأرقام..."></textarea>
+                <button onclick="extractPhones()" class="mt-2 bg-gray-800 text-white px-4 py-2 rounded text-sm">استخراج الأرقام</button>
+                <div id="extract-res" class="mt-2 text-green-600 text-sm"></div>
+            </div>
+        </div>
+
+        <div id="section-leads" class="section-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">العملاء</h2>
+                <button onclick="loadLeads()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">تحديث</button>
+            </div>
+            <div class="bg-white rounded-xl shadow overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-gray-50 text-gray-600"><tr><th class="p-4">الهاتف</th><th class="p-4">الجودة</th><th class="p-4">المصدر</th><th class="p-4">واتساب</th></tr></thead>
+                    <tbody id="leads-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="section-campaigns" class="section-content hidden">
+            <h2 class="text-2xl font-bold mb-6">حملات واتساب</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+                <h3 class="font-bold mb-4">إنشاء حملة</h3>
+                <form onsubmit="createCampaign(event)" class="space-y-4">
+                    <input name="name" type="text" placeholder="اسم الحملة" required class="w-full border p-2 rounded">
+                    <textarea name="message" placeholder="الرسالة" required class="w-full border p-2 rounded"></textarea>
+                    <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded">حفظ</button>
+                </form>
+            </div>
+            <div id="campaigns-list" class="space-y-3"></div>
+        </div>
+
+        <div id="section-chat" class="section-content hidden h-[80vh] flex flex-col">
+            <div class="bg-white p-4 rounded-t-xl border-b font-bold">💬 شات الأدمن</div>
+            <div id="chat-box" class="flex-1 bg-white p-4 overflow-y-auto space-y-2 border-x"></div>
+            <div class="p-2 bg-white rounded-b-xl border flex gap-2">
+                <input id="chat-input" class="flex-1 border p-2 rounded" placeholder="اكتب رسالة...">
+                <button onclick="sendChat()" class="bg-blue-600 text-white px-4 rounded"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="login-overlay" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-sm text-center">
+            <h2 class="text-2xl font-bold mb-6">تسجيل الدخول</h2>
+            <input id="login-email" type="email" value="admin@example.com" class="w-full border p-3 rounded mb-3" placeholder="البريد">
+            <input id="login-pass" type="password" value="admin123" class="w-full border p-3 rounded mb-4" placeholder="كلمة المرور">
+            <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-3 rounded">دخول</button>
+        </div>
     </div>
 
-    <!-- شاشة 2: لوحة التحكم -->
-    <div id="dashboard" class="container" style="display:none;">
-        <h2>🎯 لوحة تحكم Hunter Pro</h2>
-
-        <!-- أزرار الأدمن فقط -->
-        <div id="admin-only" style="display:none;">
-            <button class="btn" onclick="toggleChat()">💬 شات الأدمن</button>
-            <button class="btn" onclick="toggleExtractor()">📱 استخراج أرقام</button>
-        </div>
-
-        <!-- أزرار اليوزر العادي -->
-        <div id="user-only" style="display:none;">
-            <button class="btn" onclick="showCampaigns()">📤 حملاتى</button>
-        </div>
-
-        <!-- شات الأدمن (نفس GPT) -->
-        <div id="admin-chat-container" class="card">
-            <div class="chat-header">
-                <span>💬 شات الأدمن الذكي</span>
-                <button onclick="toggleChat()" style="background:none;border:none;color:#fff;float:left;font-size:20px;">✖</button>
-            </div>
-            <div id="admin-chat-messages" class="chat-messages"></div>
-            <div id="typing-indicator" class="typing-indicator"><span></span><span></span><span></span></div>
-            <form id="chat-form" class="chat-input-form" onsubmit="sendMessage(event)">
-                <textarea id="chat-input" placeholder="اكتب رسالتك هنا..." rows="1" autofocus></textarea>
-                <button type="submit" class="send-btn">➤</button>
-            </form>
-        </div>
-
-        <!-- استخراج الأرقام -->
-        <div id="extractor-container" class="card" style="display:none;">
-            <h3>📤 استخراج أرقام من نص</h3>
-            <textarea id="extract-text" rows="4" placeholder="انسخ النص اللي فيه أرقام هنا..."></textarea><br>
-            <button class="btn" onclick="extractPhones()">استخراج</button>
-            <div id="extract-result" style="margin-top:10px;"></div>
-        </div>
-
-        <!-- حملات اليوزر -->
-        <div id="campaigns-section" class="card" style="display:none;">
-            <h3>📤 حملاتى</h3>
-            <button class="btn" onclick="showCreateCampaign()">➕ إنشاء حملة جديدة</button>
-            <div id="create-campaign-form" style="display:none;margin-top:15px;text-align:right;">
-                <input id="campaign-name" placeholder="اسم الحملة" style="width:100%;margin-bottom:10px;"><br>
-                <textarea id="campaign-message" rows="3" placeholder="نص الرسالة" style="width:100%;margin-bottom:10px;"></textarea><br>
-                <input type="file" id="campaign-media" accept="image/*,video/*" style="margin-bottom:10px;"><br>
-                <button class="btn" onclick="createCampaign()">إنشاء الحملة</button>
-            </div>
-            <div id="campaigns-list" style="margin-top:20px;"></div>
-        </div>
-    </div>
-
-    <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        let token = "";
-        let ws = null;
-        const chatHistory = JSON.parse(localStorage.getItem("adminChat") || "[]");
+        const API = ""; 
+        let token = localStorage.getItem('token');
+        let ws;
 
-        // ====== دخول بـ Google (محاكاة) ======
-        async function loginWithGoogle() {
-            const email = prompt("أدخل بريدك الإلكتروني (محاكاة):");
-            if (!email) return;
-            const res = await fetch("/api/login", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ email: email, password: "google" })
-            });
-            const data = await res.json();
-            if (data.access_token) {
-                token = data.access_token;
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById("login-form").style.display = "none";
-                document.getElementById("dashboard").style.display = "block";
+        if(token) document.getElementById('login-overlay').classList.add('hidden');
+        if(token) initApp();
 
-                if (payload.sub === "admin@example.com") {
-                    document.getElementById("admin-only").style.display = "block";
-                } else {
-                    document.getElementById("user-only").style.display = "block";
-                }
-                connectWebSocket();
-                renderHistory();
-            } else {
-                alert("❌ بيانات خاطئة");
-            }
-        }
-
-        // ====== دخول يدوي ======
         async function login() {
-            const res = await fetch("/api/login", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    email: document.getElementById("email").value,
-                    password: document.getElementById("password").value
-                })
-            });
-            const data = await res.json();
-            if (data.access_token) {
-                token = data.access_token;
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById("login-form").style.display = "none";
-                document.getElementById("dashboard").style.display = "block";
-
-                if (payload.sub === "admin@example.com") {
-                    document.getElementById("admin-only").style.display = "block";
-                } else {
-                    document.getElementById("user-only").style.display = "block";
-                }
-                connectWebSocket();
-                renderHistory();
-            } else {
-                alert("❌ بيانات خاطئة");
-            }
-        }
-
-        // ====== توصيل WebSocket ======
-        function connectWebSocket() {
-            ws = new WebSocket(`wss://${location.host}/ws/admin-chat`);
-            ws.onmessage = e => {
-                document.getElementById('typing-indicator').style.display = 'none';
-                addMessageToUI('bot', e.data);
-                chatHistory.push({role: 'bot', text: e.data});
-                localStorage.setItem('adminChat', JSON.stringify(chatHistory));
-            };
-        }
-
-        // ====== عرض سجل المحادثة ======
-        function renderHistory() {
-            const box = document.getElementById('admin-chat-messages');
-            box.innerHTML = "";
-            chatHistory.forEach(msg => addMessageToUI(msg.role, msg.text));
-        }
-
-        // ====== إضافة رسالة للواجهة ======
-        function addMessageToUI(role, text) {
-            const box = document.getElementById('admin-chat-messages');
-            const div = document.createElement('div');
-            div.className = `chat-message ${role}`;
-            div.innerHTML = marked.parse(text);
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        // ====== إرسال رسالة ======
-        async function sendMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text || !ws) return;
-
-            if (text.startsWith('/')) {
-                document.getElementById('typing-indicator').style.display = 'flex';
-                const res = await fetch('/api/admin-command', {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
+            try {
+                const res = await fetch(API + '/api/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ command: text })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, password})
                 });
+                if(!res.ok) throw new Error('فشل الدخول');
                 const data = await res.json();
-                document.getElementById('typing-indicator').style.display = 'none';
-                addMessageToUI('bot', data.reply);
-                chatHistory.push({role: 'bot', text: data.reply});
-                localStorage.setItem('adminChat', JSON.stringify(chatHistory));
-            } else {
-                document.getElementById('typing-indicator').style.display = 'flex';
-                addMessageToUI('user', text);
-                chatHistory.push({role: 'user', text});
-                localStorage.setItem('adminChat', JSON.stringify(chatHistory));
-                ws.send(text);
-            }
-            input.value = '';
-            input.style.height = 'auto';
+                token = data.access_token;
+                localStorage.setItem('token', token);
+                document.getElementById('login-overlay').classList.add('hidden');
+                initApp();
+            } catch(e) { alert('بيانات خطأ'); }
         }
 
-        // ====== تبديل الشات ======
-        function toggleChat() {
-            const box = document.getElementById('admin-chat-container');
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        function logout() { localStorage.clear(); location.reload(); }
+
+        function initApp() {
+            loadStats();
+            loadLeads();
+            initWS();
         }
 
-        // ====== تبديل استخراج الأرقام ======
-        function toggleExtractor() {
-            const box = document.getElementById('extractor-container');
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        function showSection(id) {
+            document.querySelectorAll('.section-content').forEach(d => d.classList.add('hidden'));
+            document.getElementById('section-'+id).classList.remove('hidden');
+            if(id === 'campaigns') loadCampaigns();
         }
 
-        // ====== عرض الحملات ======
-        function showCampaigns() {
-            document.getElementById('campaigns-section').style.display = 'block';
-            loadUserCampaigns();
+        async function loadStats() {
+            const res = await fetch(API + '/api/admin-stats');
+            const data = await res.json();
+            document.getElementById('stat-leads').innerText = data.total_leads;
+            document.getElementById('stat-users').innerText = data.total_users;
         }
 
-        // ====== عرض نموذج إنشاء الحملة ======
-        function showCreateCampaign() {
-            document.getElementById('create-campaign-form').style.display = 'block';
+        async function loadLeads() {
+            const res = await fetch(API + '/api/leads');
+            const data = await res.json();
+            const html = data.leads.map(l => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-bold">${l.phone_number}</td>
+                    <td class="p-3"><span class="bg-gray-100 px-2 rounded text-xs">${l.quality}</span></td>
+                    <td class="p-3 text-xs text-gray-500">${l.source}</td>
+                    <td class="p-3"><button onclick="sendSingleWS('${l.phone_number}')" class="text-green-600"><i class="fa-brands fa-whatsapp"></i></button></td>
+                </tr>
+            `).join('');
+            document.getElementById('leads-body').innerHTML = html || '<tr><td colspan="4" class="text-center p-4">لا يوجد بيانات</td></tr>';
         }
 
-        // ====== إنشاء الحملة ======
-        async function createCampaign() {
-            const name = document.getElementById('campaign-name').value.trim();
-            const message = document.getElementById('campaign-message').value.trim();
-            const fileInput = document.getElementById('campaign-media');
-            const file = fileInput.files[0];
-            if (!name || !message) return alert("أكمل البيانات");
-
-            const formData = new FormData();
-            formData.append("name", name);
-            formData.append("message", message);
-            formData.append("user_id", "user");
-            if (file) formData.append("media", file);
-
-            const res = await fetch('/api/create-campaign', {
+        async function startHunt() {
+            const intent = document.getElementById('hunt-intent').value;
+            const city = document.getElementById('hunt-city').value;
+            if(!intent) return alert('اكتب بتبحث عن ايه');
+            Swal.fire({title: 'جاري البحث', text: 'سيبدأ النظام البحث في الخلفية', icon: 'success'});
+            await fetch(API + '/start_hunt', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const data = await res.json();
-            alert(data.reply);
-            loadUserCampaigns();
-            document.getElementById('create-campaign-form').style.display = 'none';
-            fileInput.value = "";
-        }
-
-        // ====== تحميل حملات اليوزر ======
-        async function loadUserCampaigns() {
-            const res = await fetch('/api/my-campaigns', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            const listBox = document.getElementById('campaigns-list');
-            listBox.innerHTML = "";
-            if (data.campaigns.length === 0) {
-                listBox.innerHTML = "<p>لا توجد حملات حتى الآن</p>";
-                return;
-            }
-            data.campaigns.forEach(c => {
-                const div = document.createElement('div');
-                div.className = "campaign-card";
-                div.innerHTML = `
-                    <strong>${c.name}</strong><br>
-                    <small>${c.message.substring(0, 50)}...</small><br>
-                    <small>الحالة: ${c.status} | تم الإرسال: ${c.sent_count} | تم التسليم: ${c.delivered_count}</small><br>
-                    <button class="btn" onclick="sendCampaign('${c.id}')">إرسال الآن</button>
-                    <button class="btn" onclick="deleteCampaign('${c.id}')">🗑️ حذف</button>
-                `;
-                listBox.appendChild(div);
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({intent_sentence: intent, city: city, user_id: 'admin'})
             });
         }
 
-        // ====== إرسال الحملة ======
-        async function sendCampaign(campaignId) {
-            if (!confirm("سيتم إرسال الحملة فعليًا – متأكد؟")) return;
-            const res = await fetch('/api/send-campaign', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ campaign_id: campaignId })
-            });
-            const data = await res.json();
-            alert(data.reply);
-            loadUserCampaigns();
-        }
-
-        // ====== حذف الحملة ======
-        async function deleteCampaign(campaignId) {
-            if (!confirm("سيتم حذف الحملة نهائيًا – متأكد؟")) return;
-            const res = await fetch('/api/delete-campaign', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ campaign_id: campaignId })
-            });
-            const data = await res.json();
-            alert(data.reply);
-            loadUserCampaigns();
-        }
-
-        // ====== استخراج الأرقام ======
         async function extractPhones() {
             const text = document.getElementById('extract-text').value;
-            const res = await fetch('/api/extract-phones', {
+            const res = await fetch(API + '/api/extract-phones', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ text })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
             });
             const data = await res.json();
-            const resultBox = document.getElementById('extract-result');
-            if (data.phones.length) {
-                resultBox.innerHTML = `<strong>أرقام تم استخراجها:</strong><br>${data.phones.join("<br>")}`;
-            } else {
-                resultBox.innerHTML = "❌ لم يتم العثور على أرقام";
+            document.getElementById('extract-res').innerText = `تم استخراج: ${data.phones.join(', ')}`;
+        }
+
+        async function createCampaign(e) {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            fd.append('user_id', 'admin');
+            await fetch(API + '/api/create-campaign', {method: 'POST', body: fd});
+            loadCampaigns();
+            e.target.reset();
+        }
+
+        async function loadCampaigns() {
+            const res = await fetch(API + '/api/my-campaigns?user_id=admin');
+            const data = await res.json();
+            document.getElementById('campaigns-list').innerHTML = data.campaigns.map(c => `
+                <div class="bg-gray-50 p-3 rounded border flex justify-between">
+                    <div><b>${c.name}</b><br><small>${c.message}</small></div>
+                    <button onclick="sendCamp('${c.id}')" class="text-blue-600">ارسال</button>
+                </div>
+            `).join('');
+        }
+
+        async function sendSingleWS(phone) {
+            const msg = prompt("اكتب الرسالة:");
+            if(msg) await fetch(API + '/api/send-whatsapp', {
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({phone_number: phone, message: msg, user_id: 'admin'})
+            });
+        }
+
+        // Chat
+        function initWS() {
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${proto}://${location.host}/ws/admin-chat`);
+            ws.onmessage = e => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML += `<div class="bg-gray-100 p-2 rounded self-start max-w-[80%] text-sm mb-2">${e.data}</div>`;
+                box.scrollTop = box.scrollHeight;
+            };
+        }
+        function sendChat() {
+            const inp = document.getElementById('chat-input');
+            if(inp.value && ws) {
+                ws.send(inp.value);
+                const box = document.getElementById('chat-box');
+                box.innerHTML += `<div class="bg-blue-100 p-2 rounded self-end max-w-[80%] text-sm mb-2 ml-auto">${inp.value}</div>`;
+                inp.value = '';
+                box.scrollTop = box.scrollHeight;
             }
         }
     </script>
-
 </body>
 </html>
