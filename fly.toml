@@ -4,20 +4,15 @@ primary_region = 'ams'
 [build]
   dockerfile = "Dockerfile"
 
+# إعدادات الخدمة
 [http_service]
   internal_port = 8080
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
 
-[[http_service.checks]]
-  interval = "10s"        # ✅ استخدم تنسيق نصي "10s" بدلاً من 10000
-  grace_period = "5s"     # ✅ تنسيق نصي
-  method = "GET"
-  path = "/health"
-  timeout = "2s"
-
+# إعدادات الماكينة
 [[vm]]
-  cpu_kind = 'shared'
+  cpu_kind = "shared"
   cpus = 1
   memory_mb = 1024
