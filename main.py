@@ -1,254 +1,201 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File, Form
+from fastapi import FastAPI, WebSocket, HTTPException, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from typing import Optional, List
-import os
-import re
-import json
-import time
-import requests
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import List, Dict
 from datetime import datetime, timedelta
-from supabase import create_client
-from twilio.rest import Client as TwilioClient
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# ==================== الإعدادات ====================
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-SERPER_KEYS_RAW = os.environ.get("SERPER_KEYS", "")
-SERPER_KEYS = [k.strip().replace('"', '') for k in SERPER_KEYS_RAW.split(',') if k.strip()]
-TWILIO_SID = os.environ.get("TWILIO_SID")
-TWILIO_TOKEN = os.environ.get("TWILIO_TOKEN")
-TWILIO_WHATSAPP_NUMBER = os.environ.get("TWILIO_WHATSAPP_NUMBER")
-JWT_SECRET = os.environ.get("JWT_SECRET", "secret")
+from utils import *
+from database import Database
+from whatsapp_manager import WhatsAppManager
 
+# ==================== إعداد FastAPI ====================
 app = FastAPI(title="Hunter Pro CRM")
+
+# ==================== CORS ====================
+origins = [
+    "http://localhost",
+    "http://localhost:8000"
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# اتصال قاعدة البيانات (تجاهل الخطأ لو المفاتيح مش موجودة لسه)
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL else None
+# ==================== إعداد المصادقة ====================
+SECRET_KEY = "your-super-secret-jwt-key-change-this-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 أيام
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-key_index = 0
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-# ==================== النماذج (Data Models) ====================
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+db = Database()
+whatsapp = WhatsAppManager()
 
-class HuntRequest(BaseModel):
-    intent_sentence: str
-    city: str
-    time_filter: str = "qdr:m"
-    user_id: str = "admin"
-    mode: str = "general"
+# ==================== JWT Helpers ====================
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
-class WhatsAppRequest(BaseModel):
-    phone_number: str
-    message: str
-    user_id: str
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
 
-class AddLeadRequest(BaseModel):
-    phone_number: str
-    full_name: str = ""
-    email: str = ""
-    source: str = "Manual"
-    quality: str = "جيد ⭐"
-    notes: str = ""
-    user_id: str
-    status: str = "NEW"
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
-class CampaignAction(BaseModel):
-    campaign_id: str
-
-class ExtractPhonesRequest(BaseModel):
-    text: str
-
-# ==================== الدوال المساعدة (Helpers) ====================
-def get_active_key():
-    global key_index
-    if not SERPER_KEYS: return None
-    key = SERPER_KEYS[key_index]
-    key_index = (key_index + 1) % len(SERPER_KEYS)
-    return key
-
-def analyze_quality(text):
-    text = text.lower()
-    if any(w in text for w in ["للبيع", "broker", "سمسار", "offer"]): return "TRASH"
-    if any(w in text for w in ["مطلوب", "wanted", "looking for", "buy", "محتاج"]): return "ممتاز 🔥"
-    return "جيد ⭐"
-
-def extract_phones_from_text(text):
-    phones = re.findall(r'(01[0125][0-9 \-]{8,15})', text)
-    # تنظيف الأرقام وإزالة المكرر
-    clean_phones = list(set([p.replace(" ", "").replace("-", "") for p in phones if len(p.replace(" ", "").replace("-", "")) == 11]))
-    return clean_phones
-
-def save_lead(phone, link, quality, user_id, intent):
-    if not supabase: return False
+def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
-        data = {
-            "phone_number": phone,
-            "source": f"SmartHunt: {intent}",
-            "quality": quality,
-            "notes": link,
-            "user_id": user_id,
-            "status": "NEW"
-        }
-        supabase.table("leads").upsert(data, on_conflict="phone_number").execute()
-        return True
-    except: return False
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        user = db.get_user(username)
+        if user is None:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-def run_hydra_hunt(intent, city, time_filter, user_id, mode):
-    locations = {
-        "القاهرة": ["التجمع", "مدينة نصر", "المعادي", "الرحاب"],
-        "الجيزة": ["أكتوبر", "الشيخ زايد", "الهرم", "الدقي"],
-        "الإسكندرية": ["سموحة", "ميامي", "المنتزه"]
+# ==================== Health Check ====================
+@app.get("/health")
+def health_check():
+    return {
+        "status": "running",
+        "timestamp": datetime.now().isoformat(),
+        "serper_keys": len(db.get_serper_keys()),
+        "twilio_configured": whatsapp.is_configured()
     }
-    sub_cities = locations.get(city, [city])
-    
-    for area in sub_cities:
-        queries = [
-            f'site:facebook.com "{intent}" "{area}" "010"',
-            f'"{intent}" "{area}" "مطلوب" "01"',
-            f'site:olx.com.eg "{intent}" "{area}"'
-        ]
-        for query in queries:
-            key = get_active_key()
-            if not key: break
-            try:
-                payload = json.dumps({"q": query, "num": 50, "tbs": time_filter, "gl": "eg", "hl": "ar"})
-                headers = {'X-API-KEY': key, 'Content-Type': 'application/json'}
-                res = requests.post("https://google.serper.dev/search", headers=headers, data=payload)
-                
-                if res.status_code == 200:
-                    results = res.json().get("organic", [])
-                    for r in results:
-                        snippet = f"{r.get('title')} {r.get('snippet')}"
-                        qual = analyze_quality(snippet)
-                        if qual != "TRASH":
-                            phones = extract_phones_from_text(snippet)
-                            for ph in phones:
-                                save_lead(ph, r.get('link'), qual, user_id, intent)
-            except: pass
-            time.sleep(1) # تفادي الحظر
 
-# ==================== نقاط الاتصال (Endpoints) ====================
-@app.get("/", response_class=HTMLResponse)
-async def home():
-    try:
-        with open("dashboard.html", "r", encoding="utf-8") as f: return f.read()
-    except: return "<h1>System Loading...</h1><p>Please upload dashboard.html</p>"
+@app.get("/")
+def root():
+    return {"message": "Hunter Pro CRM API is running"}
 
+# ==================== Authentication ====================
 @app.post("/api/login")
-async def login(req: LoginRequest):
-    # دخول سريع للأدمن
-    if req.email == "admin@example.com" and req.password == "admin123":
-        return {"access_token": "admin-token", "token_type": "bearer"}
-    
-    # دخول من قاعدة البيانات
-    if supabase:
-        try:
-            user = supabase.table("users").select("*").eq("username", req.email).execute()
-            if user.data and pwd_context.verify(req.password, user.data[0]['password']):
-                 return {"access_token": "db-token", "token_type": "bearer"}
-        except: pass
-    
-    raise HTTPException(401, "Invalid credentials")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = db.get_user(form_data.username)
+    if not user or not verify_password(form_data.password, user['password']):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    access_token = create_access_token(data={"sub": user['username']}, 
+                                       expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    return {"access_token": access_token, "token_type": "bearer"}
 
-@app.post("/start_hunt")
-async def start_hunt(req: HuntRequest, bg: BackgroundTasks):
-    bg.add_task(run_hydra_hunt, req.intent_sentence, req.city, req.time_filter, req.user_id, req.mode)
-    return {"status": "started", "message": "تم بدء البحث في الخلفية"}
-
+# ==================== Leads Management ====================
+@app.get("/leads")
 @app.get("/api/leads")
-def get_leads(user_id: str = "admin"):
-    if not supabase: return {"success": False, "leads": []}
-    try:
-        res = supabase.table("leads").select("*").order("created_at", desc=True).limit(500).execute()
-        return {"success": True, "leads": res.data}
-    except: return {"success": False, "leads": []}
+def get_leads(user_id: str = None, current_user: dict = Depends(get_current_user)):
+    return {"success": True, "leads": db.get_leads(user_id)}
 
+@app.post("/add-lead")
 @app.post("/api/add-lead")
-def add_lead(req: AddLeadRequest):
-    if not supabase: return {"success": False}
-    try:
-        supabase.table("leads").insert(req.dict()).execute()
-        return {"success": True}
-    except Exception as e: return {"success": False, "error": str(e)}
+def add_lead(lead: Dict, current_user: dict = Depends(get_current_user)):
+    db.add_lead(lead)
+    return {"success": True, "message": "تم إضافة العميل بنجاح"}
 
+# ==================== WhatsApp ====================
+@app.post("/send-whatsapp")
 @app.post("/api/send-whatsapp")
-def send_whatsapp(req: WhatsAppRequest):
-    if not TWILIO_SID: return {"success": False, "error": "Twilio not configured"}
-    try:
-        client = TwilioClient(TWILIO_SID, TWILIO_TOKEN)
-        client.messages.create(
-            from_=f"whatsapp:{TWILIO_WHATSAPP_NUMBER}",
-            body=req.message,
-            to=f"whatsapp:{req.phone_number}"
-        )
-        if supabase:
-            supabase.table("campaign_logs").insert({
-                "lead_phone": req.phone_number, "message_sent": req.message, "status": "sent", "user_id": req.user_id
-            }).execute()
-        return {"success": True}
-    except Exception as e: return {"success": False, "error": str(e)}
+def send_whatsapp(data: Dict, current_user: dict = Depends(get_current_user)):
+    result = whatsapp.send_message(data['phone_number'], data['message'])
+    return {"success": True, "message": "تم إرسال الرسالة", "sid": result}
 
+# ==================== Campaigns ====================
 @app.post("/api/create-campaign")
-async def create_campaign(name: str = Form(...), message: str = Form(...), user_id: str = Form(...)):
-    if not supabase: return {"success": False}
-    try:
-        supabase.table("whatsapp_campaigns").insert({"name": name, "message": message, "user_id": user_id}).execute()
-        return {"success": True}
-    except: return {"success": False}
+def create_campaign(name: str, message: str, user_id: str, media: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
+    campaign_id = db.create_campaign(name, message, user_id, media)
+    return {"success": True, "reply": "تم إنشاء الحملة بنجاح", "campaign_id": campaign_id}
 
 @app.get("/api/my-campaigns")
-def get_campaigns(user_id: str):
-    if not supabase: return {"success": False, "campaigns": []}
-    try:
-        res = supabase.table("whatsapp_campaigns").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
-        return {"success": True, "campaigns": res.data}
-    except: return {"success": False, "campaigns": []}
+def get_my_campaigns(user_id: str = None, current_user: dict = Depends(get_current_user)):
+    return {"success": True, "campaigns": db.get_campaigns(user_id)}
 
 @app.post("/api/send-campaign")
-async def send_campaign(req: CampaignAction, bg: BackgroundTasks):
-    # محاكاة إرسال الحملة لتجنب الحظر
-    return {"success": True, "reply": "بدأ إرسال الحملة"}
+def send_campaign(data: Dict, current_user: dict = Depends(get_current_user)):
+    count = whatsapp.send_campaign(data['campaign_id'])
+    return {"success": True, "reply": f"تم إرسال {count} رسالة"}
 
+@app.delete("/api/delete-campaign")
+def delete_campaign(data: Dict, current_user: dict = Depends(get_current_user)):
+    db.delete_campaign(data['campaign_id'])
+    return {"success": True, "reply": "تم حذف الحملة"}
+
+# ==================== Utilities ====================
 @app.post("/api/extract-phones")
-def extract_phones(req: ExtractPhonesRequest):
-    return {"success": True, "phones": extract_phones_from_text(req.text)}
+def extract_phones_endpoint(data: Dict, current_user: dict = Depends(get_current_user)):
+    phones = extract_phone_numbers(data['text'])
+    return {"success": True, "phones": phones}
 
+# ==================== Sharing ====================
+@app.post("/share-lead")
+def share_lead(data: Dict, current_user: dict = Depends(get_current_user)):
+    share_link = db.share_lead(data)
+    return {"success": True, "share_link": share_link}
+
+@app.get("/public/lead/{phone}")
+def get_public_lead(phone: str):
+    lead = db.get_public_lead(phone)
+    return {"success": True, "lead": lead}
+
+@app.get("/api/lead-share-status")
+def lead_share_status(phone: str):
+    status = db.get_lead_share_status(phone)
+    return {"success": True, "share_status": status['status'], "share_date": status['date'], "share_by": status['by']}
+
+@app.post("/api/cancel-share")
+def cancel_share(data: Dict):
+    db.cancel_share(data['phone'], data['user_id'])
+    return {"success": True, "message": "تم إلغاء المشاركة"}
+
+# ==================== Statistics ====================
+@app.get("/admin-stats")
 @app.get("/api/admin-stats")
-def stats():
-    users_count = 0
-    leads_count = 0
-    if supabase:
-        try:
-            users_count = supabase.table("users").select("id", count="exact").execute().count or 1
-            leads_count = supabase.table("leads").select("id", count="exact").execute().count or 0
-        except: pass
-    return {"total_users": users_count, "total_leads": leads_count, "total_messages": 0}
+def admin_stats(user_id: str = None):
+    return db.get_admin_stats(user_id)
 
-@app.get("/health")
-def health(): return {"status": "ok", "time": datetime.now()}
+@app.get("/last-events")
+@app.get("/api/last-events")
+def last_events():
+    return {"success": True, "events": db.get_last_events()}
 
-# WebSocket Admin Chat
+# ==================== Users ====================
+@app.post("/add-user")
+@app.post("/api/add-user")
+def add_user(data: Dict, current_user: dict = Depends(get_current_user)):
+    db.add_user(data)
+    return {"success": True, "message": "تم إضافة المستخدم"}
+
+@app.post("/delete-user")
+@app.post("/api/delete-user")
+def delete_user(data: Dict):
+    db.delete_user(data['username'])
+    return {"success": True, "message": "تم حذف المستخدم"}
+
+@app.post("/update-permissions")
+@app.post("/api/update-permissions")
+def update_permissions(data: Dict):
+    db.update_user_permissions(data)
+    return {"success": True, "message": "تم تحديث الصلاحيات"}
+
+# ==================== Admin Chat ====================
 @app.websocket("/ws/admin-chat")
-async def ws_endpoint(websocket: WebSocket):
+async def admin_chat_ws(websocket: WebSocket):
     await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_text()
-            # رد تلقائي بسيط من النظام
-            if "stats" in data:
-                await websocket.send_text("📊 الإحصائيات متاحة في لوحة التحكم.")
-            else:
-                await websocket.send_text(f"تم استلام أمرك: {data}")
-    except: pass
+    await websocket.send_text("مرحباً بك في شات الأدمن!")
+    while True:
+        try:
+            msg = await websocket.receive_text()
+            # هنا يمكن معالجة الأوامر مثل /stats و /help
+            await websocket.send_text(f"تم الاستلام: {msg}")
+        except Exception:
+            break
