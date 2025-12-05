@@ -2,23 +2,12 @@ services:
   - type: web
     name: hunter-pro-crm
     env: python
-    plan: free
-    region: oregon
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    autoDeploy: true
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
     envVars:
-      - key: SUPABASE_URL
-        fromDatabase: null
-      - key: SUPABASE_KEY
-        fromDatabase: null
-      - key: JWT_SECRET
-        fromDatabase: null
-      - key: SERPER_KEYS
-        fromDatabase: null
-      - key: TWILIO_SID
-        fromDatabase: null
-      - key: TWILIO_TOKEN
-        fromDatabase: null
-      - key: TWILIO_WHATSAPP_NUMBER
-        fromDatabase: null
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health
+    autoDeploy: true
