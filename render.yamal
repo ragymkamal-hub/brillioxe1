@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: hunter-pro-crm
+    env: python
+    runtime: python-3.11
+    region: frankfurt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
+    plan: free
+    
+    envVars:
+      # ==================== قاعدة البيانات ====================
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      
+      # ==================== Serper API (البحث) ====================
+      - key: SERPER_KEYS
+        sync: false
+      
+      # ==================== Twilio WhatsApp ====================
+      - key: TWILIO_SID
+        sync: false
+      - key: TWILIO_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_NUMBER
+        sync: false
+      
+      # ==================== JWT Security ====================
+      - key: JWT_SECRET
+        generateValue: true
+      
+      # ==================== Optional: AI Features ====================
+      - key: GROQ_API_KEY
+        sync: false
+    
+    healthCheckPath: /health
+    
+    autoDeploy: true
