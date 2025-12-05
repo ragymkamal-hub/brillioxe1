@@ -214,31 +214,6 @@ def verify_jwt_token(token: str):
     except:
         return None
 
-# ==================== Rate Limiting System ====================
-request_count = 0
-last_reset = time.time()
-
-def safe_request_delay():
-    """نظام تأخير ذكي لتجنب Rate Limiting"""
-    global request_count, last_reset
-    
-    # إعادة تعيين العداد كل دقيقة
-    if time.time() - last_reset > 60:
-        request_count = 0
-        last_reset = time.time()
-    
-    request_count += 1
-    
-    # تأخير متدرج حسب عدد الطلبات
-    if request_count > 30:
-        time.sleep(3.0)
-    elif request_count > 20:
-        time.sleep(2.0)
-    elif request_count > 10:
-        time.sleep(1.5)
-    else:
-        time.sleep(1.0)
-
 # ==================== محرك البحث ====================
 def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, mode: str):
     """محرك البحث الذكي - Diamond Hunter"""
@@ -256,16 +231,11 @@ def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, 
     print(f"🌍 Quality Hunt Started: {search_intent} in {sub_cities}")
     
     total_found = 0
-    domains_checked = 0
     start_time = datetime.now()
     
     for area in sub_cities:
-        # استراتيجيات بحث متعددة
         queries = [
             f'site:facebook.com "{search_intent}" "{area}" "010"',
-            f'site:facebook.com "{search_intent}" "{area}" "011"',
-            f'site:facebook.com "{search_intent}" "{area}" "012"',
-            f'site:facebook.com "{search_intent}" "{area}" "015"',
             f'site:olx.com.eg "{search_intent}" "{area}" "010"',
             f'"{search_intent}" "{area}" "مطلوب" "01"',
             f'"{search_intent}" "{area}" "wanted" "01"'
@@ -276,9 +246,6 @@ def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, 
             if not api_key:
                 break
             
-            # تطبيق التأخير الآمن
-            safe_request_delay()
-            
             payload = json.dumps({
                 "q": query,
                 "num": 100,
@@ -288,8 +255,7 @@ def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, 
             })
             headers = {
                 'X-API-KEY': api_key,
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'Content-Type': 'application/json'
             }
             
             try:
@@ -301,18 +267,8 @@ def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, 
                     timeout=30
                 )
                 
-                # معالجة Rate Limiting
-                if response.status_code == 429:
-                    print("⚠️ Rate limit hit - waiting 10 seconds...")
-                    time.sleep(10)
-                    continue
-                elif response.status_code != 200:
-                    print(f"❌ API Error: {response.status_code}")
-                    continue
-                
                 if response.status_code == 200:
                     results = response.json().get("organic", [])
-                    domains_checked += len(results)
                     
                     for res in results:
                         snippet = f"{res.get('title', '')} {res.get('snippet', '')}"
@@ -324,9 +280,6 @@ def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, 
                                 if save_lead(phone, None, intent, res.get('link'), quality, user_id):
                                     total_found += 1
                 
-            except requests.exceptions.Timeout:
-                print("⏰ Request timeout - continuing...")
-                continue
             except Exception as e:
                 print(f"   ⚠️ Error: {e}")
     
@@ -338,14 +291,13 @@ def run_hydra_hunt(intent: str, main_city: str, time_filter: str, user_id: str, 
             "intent": intent,
             "city": main_city,
             "results_count": total_found,
-            "domains_checked": domains_checked,
             "duration_seconds": duration,
             "mode": mode
         }).execute()
     except:
         pass
     
-    print(f"🏁 Hunt Finished! Found: {total_found} diamonds | Checked: {domains_checked} domains | Time: {duration}s")
+    print(f"🏁 Hunt Finished! Found: {total_found} diamonds in {duration}s")
 
 # ==================== Endpoints ====================
 @app.get("/", response_class=HTMLResponse)
@@ -644,112 +596,4 @@ def admin_stats(user_id: str = "admin"):
             "total_leads": total_leads,
             "total_messages": total_messages
         }
-    except:
-        return {"total_users": 0, "total_leads": 0, "total_messages": 0}
-
-@app.get("/last-events")
-@app.get("/api/last-events")
-def last_events():
-    """آخر الأحداث"""
-    try:
-        events = supabase.table("events").select("*").order("created_at", desc=True).limit(10).execute()
-        return {"success": True, "events": events.data}
-    except:
-        return {"success": False, "events": []}
-
-@app.post("/add-user")
-@app.post("/api/add-user")
-def add_user(req: AddUserRequest):
-    """إضافة مستخدم جديد"""
-    try:
-        hashed_password = pwd_context.hash(req.password)
-        user_data = req.dict()
-        user_data["password"] = hashed_password
-        
-        supabase.table("users").insert(user_data).execute()
-        return {"success": True, "message": "تم إضافة المستخدم"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-@app.post("/delete-user")
-@app.post("/api/delete-user")
-def delete_user(username: str):
-    """حذف مستخدم"""
-    try:
-        supabase.table("users").delete().eq("username", username).execute()
-        return {"success": True, "message": "تم حذف المستخدم"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-@app.post("/update-permissions")
-@app.post("/api/update-permissions")
-def update_permissions(req: UpdatePermissions):
-    """تحديث صلاحيات المستخدم"""
-    try:
-        supabase.table("users").update({
-            "can_hunt": req.can_hunt,
-            "can_campaign": req.can_campaign,
-            "can_share": req.can_share,
-            "can_see_all_data": req.can_see_all_data,
-            "is_admin": req.is_admin
-        }).eq("username", req.username).execute()
-        return {"success": True, "message": "تم تحديث الصلاحيات"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-# ==================== شات الأدمن WebSocket ====================
-active_connections: List[WebSocket] = []
-
-@app.websocket("/ws/admin-chat")
-async def admin_chat_websocket(websocket: WebSocket):
-    """شات الأدمن الذكي"""
-    await websocket.accept()
-    active_connections.append(websocket)
-    
-    try:
-        while True:
-            data = await websocket.receive_text()
-            
-            # معالجة بسيطة (يمكن إضافة AI لاحقاً)
-            response = f"تم استلام رسالتك: {data}"
-            
-            if "إحصائيات" in data or "stats" in data.lower():
-                stats = admin_stats()
-                response = f"📊 إحصائيات النظام:\n"
-                response += f"• إجمالي المستخدمين: {stats['total_users']}\n"
-                response += f"• إجمالي العملاء: {stats['total_leads']}\n"
-                response += f"• إجمالي الرسائل: {stats['total_messages']}"
-            
-            await websocket.send_text(response)
-    
-    except WebSocketDisconnect:
-        active_connections.remove(websocket)
-
-@app.post("/api/admin-command")
-async def admin_command(req: AdminCommand):
-    """تنفيذ أوامر الأدمن"""
-    try:
-        command = req.command.lower()
-        
-        if command.startswith('/stats'):
-            stats = admin_stats()
-            return {"reply": f"📊 الإحصائيات:\nالمستخدمين: {stats['total_users']}\nالعملاء: {stats['total_leads']}\nالرسائل: {stats['total_messages']}"}
-        
-        elif command.startswith('/help'):
-            return {"reply": "🎯 الأوامر المتاحة:\n/stats - عرض الإحصائيات\n/help - عرض المساعدة\n/users - قائمة المستخدمين"}
-        
-        elif command.startswith('/users'):
-            users = supabase.table("users").select("username, role").execute()
-            user_list = "\n".join([f"• {u['username']} ({u['role']})" for u in users.data])
-            return {"reply": f"👥 المستخدمين:\n{user_list}"}
-        
-        else:
-            return {"reply": "❌ أمر غير معروف. استخدم /help لعرض الأوامر المتاحة"}
-    
-    except Exception as e:
-        return {"reply": f"❌ خطأ: {str(e)}"}
-
-# ==================== تشغيل التطبيق ====================
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    except
