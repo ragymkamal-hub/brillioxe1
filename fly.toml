@@ -7,20 +7,14 @@ primary_region = 'ams'
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
-
-# ✅ تم إصلاح grace_period من "5s" إلى "5s" صحيح (نفسه لكن النظام تبنى)
-# المشكلة كانت في التنسيق، نستخدم الآن التنسيق الصحيح
 
 [[http_service.checks]]
-  interval = 10000  # ✅ هذا 10 ثواني (10000 ميليثانية)
-  grace_period = "5s"  # ✅ يجب أن يكون تنسيق صحيح
+  interval = "10s"        # ✅ استخدم تنسيق نصي "10s" بدلاً من 10000
+  grace_period = "5s"     # ✅ تنسيق نصي
   method = "GET"
   path = "/health"
-  protocol = "http"
   timeout = "2s"
 
 [[vm]]
